@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "stm32h5xx_hal_gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -110,7 +111,7 @@ int main(void)
   MX_ADC1_Init();
   MX_FDCAN2_Init();
   MX_I2C1_Init();
-  MX_SDMMC1_SD_Init();
+  // MX_SDMMC1_SD_Init();
   MX_SPI4_Init();
   MX_USART1_UART_Init();
   MX_USB_PCD_Init();
@@ -126,6 +127,14 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    HAL_GPIO_TogglePin(LED_1_Ctrl_GPIO_Port, LED_1_Ctrl_Pin);
+    HAL_Delay(250);
+    HAL_GPIO_TogglePin(LED_2_Ctrl_GPIO_Port, LED_2_Ctrl_Pin);
+    HAL_Delay(250);
+    HAL_GPIO_TogglePin(LED_3_Ctrl_GPIO_Port, LED_3_Ctrl_Pin);
+    HAL_Delay(250);
+    HAL_GPIO_TogglePin(LED_4_Ctrl_GPIO_Port, LED_4_Ctrl_Pin);
+    HAL_Delay(250);
   }
   /* USER CODE END 3 */
 }

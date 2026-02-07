@@ -148,6 +148,51 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 }
 
 /**
+  * @brief DTS MSP Initialization
+  * This function configures the hardware resources used in this example
+  * @param hdts: DTS handle pointer
+  * @retval None
+  */
+void HAL_DTS_MspInit(DTS_HandleTypeDef* hdts)
+{
+  if(hdts->Instance==DTS)
+  {
+    /* USER CODE BEGIN DTS_MspInit 0 */
+
+    /* USER CODE END DTS_MspInit 0 */
+    /* Peripheral clock enable */
+    __HAL_RCC_DTS_CLK_ENABLE();
+    /* USER CODE BEGIN DTS_MspInit 1 */
+
+    /* USER CODE END DTS_MspInit 1 */
+
+  }
+
+}
+
+/**
+  * @brief DTS MSP De-Initialization
+  * This function freeze the hardware resources used in this example
+  * @param hdts: DTS handle pointer
+  * @retval None
+  */
+void HAL_DTS_MspDeInit(DTS_HandleTypeDef* hdts)
+{
+  if(hdts->Instance==DTS)
+  {
+    /* USER CODE BEGIN DTS_MspDeInit 0 */
+
+    /* USER CODE END DTS_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_DTS_CLK_DISABLE();
+    /* USER CODE BEGIN DTS_MspDeInit 1 */
+
+    /* USER CODE END DTS_MspDeInit 1 */
+  }
+
+}
+
+/**
   * @brief FDCAN MSP Initialization
   * This function configures the hardware resources used in this example
   * @param hfdcan: FDCAN handle pointer
@@ -604,7 +649,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* hpcd)
     PeriphClkInitStruct.PLL3.PLL3R = 2;
     PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3_VCIRANGE_3;
     PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3_VCORANGE_WIDE;
-    PeriphClkInitStruct.PLL3.PLL3FRACN = 0.0;
+    PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
     PeriphClkInitStruct.PLL3.PLL3ClockOut = RCC_PLL3_DIVQ;
     PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_PLL3Q;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)

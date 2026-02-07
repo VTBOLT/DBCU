@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stm32h5xx_hal_def.h"
+#include "stm32h5xx_hal_dts.h"
 #include "stm32h5xx_hal_fdcan.h"
 #include "stm32h5xx_hal_gpio.h"
 // #include "ws2812b.h"
@@ -46,6 +47,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+
+DTS_HandleTypeDef hdts;
 
 FDCAN_HandleTypeDef hfdcan2;
 
@@ -75,6 +78,7 @@ static void MX_SPI4_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USB_PCD_Init(void);
 static void MX_ICACHE_Init(void);
+static void MX_DTS_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -126,6 +130,7 @@ int main(void) {
   MX_USB_PCD_Init();
   MX_ICACHE_Init();
   MX_FileX_Init();
+  MX_DTS_Init();
   /* USER CODE BEGIN 2 */
   HAL_GPIO_WritePin(LED_1_Ctrl_GPIO_Port, LED_1_Ctrl_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(LVGPIO1_GPIO_Port, LVGPIO1_Pin, GPIO_PIN_SET);
@@ -140,6 +145,9 @@ int main(void) {
   // WS2812B_WaitComplete(&led_strips, 100);
   HAL_GPIO_WritePin(LED_1_Ctrl_GPIO_Port, LED_1_Ctrl_Pin, GPIO_PIN_SET);
   HAL_FDCAN_Start(&hfdcan2);
+
+  int32_t temp;
+  HAL_DTS_GetTemperature(&hdts, &temp);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -266,6 +274,36 @@ static void MX_ADC1_Init(void) {
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
+}
+
+/**
+ * @brief DTS Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_DTS_Init(void) {
+
+  /* USER CODE BEGIN DTS_Init 0 */
+
+  /* USER CODE END DTS_Init 0 */
+
+  /* USER CODE BEGIN DTS_Init 1 */
+
+  /* USER CODE END DTS_Init 1 */
+  hdts.Instance = DTS;
+  hdts.Init.QuickMeasure = DTS_QUICKMEAS_DISABLE;
+  hdts.Init.RefClock = DTS_REFCLKSEL_PCLK;
+  hdts.Init.TriggerInput = DTS_TRIGGER_HW_NONE;
+  hdts.Init.SamplingTime = DTS_SMP_TIME_1_CYCLE;
+  hdts.Init.Divider = 0;
+  hdts.Init.HighThreshold = 0x0;
+  hdts.Init.LowThreshold = 0x0;
+  if (HAL_DTS_Init(&hdts) != HAL_OK) {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN DTS_Init 2 */
+
+  /* USER CODE END DTS_Init 2 */
 }
 
 /**

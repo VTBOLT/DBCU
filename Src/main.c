@@ -18,11 +18,14 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "stm32h5xx_hal_gpio.h"
+#include "app_filex.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stm32h5xx_hal_def.h"
+#include "stm32h5xx_hal_fdcan.h"
+#include "stm32h5xx_hal_gpio.h"
+// #include "ws2812b.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,7 +59,11 @@ UART_HandleTypeDef huart1;
 PCD_HandleTypeDef hpcd_USB_DRD_FS;
 
 /* USER CODE BEGIN PV */
-
+// WS2812B_Handle_t led_strips;
+FX_MEDIA sd_disk;
+FX_FILE my_file;
+UINT status;
+UCHAR media_memory[512];  // Buffer for media operations
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -76,7 +83,11 @@ static void MX_ICACHE_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+// void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
+//     if (htim->Instance == TIM3) {
+//         WS2812B_DMA_Complete(&led_strips);
+//     }
+// }
 /* USER CODE END 0 */
 
 /**
@@ -111,13 +122,62 @@ int main(void)
   MX_ADC1_Init();
   MX_FDCAN2_Init();
   MX_I2C1_Init();
-  // MX_SDMMC1_SD_Init();
+  MX_SDMMC1_SD_Init();
   MX_SPI4_Init();
   MX_USART1_UART_Init();
   MX_USB_PCD_Init();
   MX_ICACHE_Init();
+  MX_FileX_Init();
   /* USER CODE BEGIN 2 */
+  HAL_GPIO_WritePin(LED_1_Ctrl_GPIO_Port, LED_1_Ctrl_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LVGPIO1_GPIO_Port, LVGPIO1_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(LVGPIO2_GPIO_Port, LVGPIO2_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(LVGPIO3_GPIO_Port, LVGPIO3_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(LVGPIO4_GPIO_Port, LVGPIO4_Pin, GPIO_PIN_SET);
+  // WS2812B_Init(&led_strips, &htim3, TIM_CHANNEL_1, 8);
+  // WS2812B_Update(&led_strips);
 
+  // WS2812B_SetAll(&led_strips, 0, 0, 255);
+  // WS2812B_Update(&led_strips);
+  // WS2812B_WaitComplete(&led_strips, 100);
+  HAL_GPIO_WritePin(LED_1_Ctrl_GPIO_Port, LED_1_Ctrl_Pin, GPIO_PIN_SET);
+  HAL_FDCAN_Start(&hfdcan2);
+
+
+  status = fx_media_open(&sd_disk, "SD Card", 
+                       fx_stm32_sd_driver,    // Your driver function
+                       0,                      // Driver info pointer
+                       media_memory,           // Media buffer pointer
+                       512);  // Media buffer size
+  if (status != FX_SUCCESS) {
+      // Handle error
+      Error_Handler();
+  }
+
+  status = fx_file_create(&sd_disk, "test.txt");
+  if (status != FX_SUCCESS && status != FX_ALREADY_CREATED) {
+      // Handle error
+        Error_Handler();
+  }
+
+  status = fx_file_open(&sd_disk, &my_file, "test.txt", FX_OPEN_FOR_WRITE);
+  if (status != FX_SUCCESS) {
+      // Handle error
+      Error_Handler();
+  }
+
+  // 3. Write data
+  char data[] = "Hello from STM32 with FileX!\r\n";
+  status = fx_file_write(&my_file, data, strlen(data));
+  if (status != FX_SUCCESS) {
+      // Handle error
+        Error_Handler();
+  }
+
+  // 4. Close the file
+  fx_file_close(&my_file);
+
+  fx_media_close(&sd_disk);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -128,12 +188,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     HAL_GPIO_TogglePin(LED_1_Ctrl_GPIO_Port, LED_1_Ctrl_Pin);
-    HAL_Delay(250);
-    HAL_GPIO_TogglePin(LED_2_Ctrl_GPIO_Port, LED_2_Ctrl_Pin);
-    HAL_Delay(250);
-    HAL_GPIO_TogglePin(LED_3_Ctrl_GPIO_Port, LED_3_Ctrl_Pin);
-    HAL_Delay(250);
-    HAL_GPIO_TogglePin(LED_4_Ctrl_GPIO_Port, LED_4_Ctrl_Pin);
+
     HAL_Delay(250);
   }
   /* USER CODE END 3 */
@@ -157,9 +212,8 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLL1_SOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 4;
@@ -395,14 +449,13 @@ static void MX_SDMMC1_SD_Init(void)
   /* USER CODE END SDMMC1_Init 0 */
 
   /* USER CODE BEGIN SDMMC1_Init 1 */
-
   /* USER CODE END SDMMC1_Init 1 */
   hsd1.Instance = SDMMC1;
   hsd1.Init.ClockEdge = SDMMC_CLOCK_EDGE_RISING;
   hsd1.Init.ClockPowerSave = SDMMC_CLOCK_POWER_SAVE_DISABLE;
   hsd1.Init.BusWide = SDMMC_BUS_WIDE_4B;
   hsd1.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
-  hsd1.Init.ClockDiv = 0;
+  hsd1.Init.ClockDiv = 512;
   if (HAL_SD_Init(&hsd1) != HAL_OK)
   {
     Error_Handler();
@@ -569,7 +622,8 @@ static void MX_GPIO_Init(void)
                           |LED_1_Ctrl_Pin|LED_2_Ctrl_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, HVIL_Out_Pin|HV_Staging_Pin|LED_3_Ctrl_Pin|LED_4_Ctrl_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, HVIL_Out_Pin|HV_Staging_Pin|LVGPIO1_Pin|LVGPIO2_Pin
+                          |LVGPIO3_Pin|LVGPIO4_Pin|LED_3_Ctrl_Pin|LED_4_Ctrl_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, SW12V_1_Pin|SW12V_2_Pin, GPIO_PIN_RESET);
@@ -583,18 +637,23 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : HVIL_In_Pin LVGPIO1_Pin LVGPIO2_Pin LVGPIO3_Pin
-                           LVGPIO4_Pin */
-  GPIO_InitStruct.Pin = HVIL_In_Pin|LVGPIO1_Pin|LVGPIO2_Pin|LVGPIO3_Pin
-                          |LVGPIO4_Pin;
+  /*Configure GPIO pin : HVIL_In_Pin */
+  GPIO_InitStruct.Pin = HVIL_In_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(HVIL_In_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : HVIL_Out_Pin HV_Staging_Pin LED_3_Ctrl_Pin LED_4_Ctrl_Pin */
   GPIO_InitStruct.Pin = HVIL_Out_Pin|HV_Staging_Pin|LED_3_Ctrl_Pin|LED_4_Ctrl_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : LVGPIO1_Pin LVGPIO2_Pin LVGPIO3_Pin LVGPIO4_Pin */
+  GPIO_InitStruct.Pin = LVGPIO1_Pin|LVGPIO2_Pin|LVGPIO3_Pin|LVGPIO4_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 

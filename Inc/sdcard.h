@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 /**
  * @brief Opens the SD card for writing.
  *
@@ -14,7 +16,7 @@ bool SD_Open(void);
  * @return true if file creation was successful or it already exists, false
  * otherwise.
  */
-bool SD_CreateFile(const char *filename);
+bool SD_CreateFile(char *filename);
 
 /**
  * @brief Writes data to a file on the SD card.
@@ -23,7 +25,7 @@ bool SD_CreateFile(const char *filename);
  * @param length Number of bytes to write.
  * @return true if write operation was successful, false otherwise.
  */
-bool SD_WriteFile(const char *filename, const uint8_t *data, uint32_t length);
+bool SD_WriteFile(char *filename, const uint8_t *data, uint32_t length);
 
 /**
  * @brief Closes the SD card device

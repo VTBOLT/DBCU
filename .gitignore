@@ -1,5 +1,6 @@
 build
 mx.scratch
+.clangd
 !.settings
 **/.settings/**
-**/.vscode/**
+.vscode/**
